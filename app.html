@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>購買物品價格與細節紀錄 App</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        body {
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        .form-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #e9e9e9;
+        }
+        .form-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+        .form-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+        }
+        input, select, button {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .btn-share {
+            background-color: #17a2b8;
+        }
+        .btn-share:hover {
+            background-color: #138496;
+        }
+        .search-box {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            text-align: left;
+        }
+        tr.category-row {
+            background-color: #ffff00; /* 圖片中的經典黃色標籤 */
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .price {
+            font-weight: bold;
+            color: #d9534f;
+        }
+        .action-btn {
+            background-color: #dc3545;
+            padding: 4px 8px;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+        .action-btn:hover {
+            background-color: #c82333;
+        }
+        .edit-btn {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .edit-btn:hover {
+            background-color: #e0a800;
+        }
+
+        /* 模態框 Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+    </style>
+
+    <!-- Firebase SDK (Modular Version) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, writeBatch 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Demo 預設 Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyDemoKeyForPublicShoppingList123",
+            authDomain: "shopping-list-demo.firebaseapp.com",
+            projectId: "shopping-list-demo",
+            storageBucket: "shopping-list-demo.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:demo123456789"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const itemsCollection = collection(db, "shopping_items");
+
+        let items = [];
+        let editingId = null;
+
+        // 預設資料
+        const initialData = [
+            { category: "日用品", name: "洗衣珠", detail: "", price: "", spec: "", pack: "" },
+            { category: "日用品", name: "洗衣精", detail: "", price: "", spec: "", pack: "" },
+            { category: "日用品", name: "大垃圾膠袋", detail: "EcoBag Refuse Sacks", price: 5.99, spec: "30mm", pack: "50L" },
+            { category: "寵物", name: "白醋", detail: "Hexeal White Vinegar", price: 7.95, spec: "5Litre", pack: "2packs" },
+            { category: "寵物", name: "尿墊", detail: "Petklicity or Drylife", price: 23.00, spec: "90*60", pack: "100" },
+            { category: "寵物", name: "洗地清潔劑", detail: "Pet Disinfectant", price: 28.00, spec: "5Litre", pack: "4packs" },
+            { category: "寵物", name: "狗執屎袋", detail: "Dog poo bags", price: 19.00, spec: "", pack: "1000Pcs" },
+            { category: "寵物", name: "狗濕糧", detail: "Winalot Meaty Chunks", price: 19.95, spec: "100g", pack: "80packs" },
+            { category: "寵物", name: "狗濕糧", detail: "Winalot Sunday Dinner Gravy", price: 11.49, spec: "100g", pack: "40packs" },
+            { category: "寵物", name: "狗干糧", detail: "Tesco Beef & Vegetable Dry Dog Food 12Kg", price: 11.50, spec: "12kg", pack: "" },
+            { category: "寵物", name: "貓糧", detail: "", price: "", spec: "", pack: "" },
+            { category: "寵物", name: "貓砂", detail: "Fukumaru Tofu Cat", price: 27.13, spec: "6lb", pack: "4packs" }
+        ];
+
+        // 實時監聽 Firestore 資料
+        onSnapshot(itemsCollection, (snapshot) => {
+            items = [];
+            snapshot.forEach(doc => {
+                items.push({ id: doc.id, ...doc.data() });
+            });
+            
+            // 如果雲端為空，自動載入初始資料
+            if (items.length === 0 && !localStorage.getItem('initialized')) {
+                initDefaultData();
+            } else {
+                renderTable();
+                updateCategorySelects();
+            }
+        }, (error) => {
+            console.warn("Firestore 使用離線/Demo模式:", error);
+            // 本地 LocalStorage 備用邏輯
+            items = JSON.parse(localStorage.getItem('purchase_items')) || initialData;
+            renderTable();
+            updateCategorySelects();
+        });
+
+        async function initDefaultData() {
+            localStorage.setItem('initialized', 'true');
+            for (const item of initialData) {
+                await addDoc(itemsCollection, item);
+            }
+        }
+
+        // 更新分類選單（現有分類 + 新增分類選項）
+        function updateCategorySelects() {
+            const categories = [...new Set(items.map(item => item.category).filter(Boolean))];
+            
+            ['categorySelect', 'editCategorySelect'].forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (!select) return;
+
+                const currentValue = select.value;
+                select.innerHTML = '';
+
+                // 預設提示
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value = '';
+                defaultOpt.textContent = '-- 請選擇分類 --';
+                select.appendChild(defaultOpt);
+
+                // 現有分類
+                categories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.textContent = cat;
+                    select.appendChild(opt);
+                });
+
+                // 新增分類選項
+                const newOpt = document.createElement('option');
+                newOpt.value = '__new__';
+                newOpt.textContent = '+ 新增分類...';
+                select.appendChild(newOpt);
+
+                // 保留先前選中的值
+                if (currentValue && currentValue !== '__new__') {
+                    select.value = currentValue;
+                }
+            });
+        }
+
+        // 分類變更事件處理（關鍵修復處）
+        window.handleCategoryChange = function(selectId) {
+            const select = document.getElementById(selectId);
+            if (select.value === '__new__') {
+                const newCat = prompt('請輸入新分類名稱：');
+                if (newCat && newCat.trim() !== '') {
+                    const trimmedCat = newCat.trim();
+
+                    // 檢查是否已存在該選項
+                    let existingOpt = Array.from(select.options).find(opt => opt.value === trimmedCat);
+                    if (!existingOpt) {
+                        // 動態將新選項插入在 "+ 新增分類..." 之前
+                        const opt = document.createElement('option');
+                        opt.value = trimmedCat;
+                        opt.textContent = trimmedCat;
+                        select.insertBefore(opt, select.lastElementChild);
+                    }
+                    select.value = trimmedCat; // 設定為新選中的分類
+                } else {
+                    select.value = ''; // 若取消則還原
+                }
+            }
+        };
+
+        // 渲染表格
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const filter = document.getElementById('search').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            const grouped = {};
+            items.forEach(item => {
+                const cat = item.category || '未分類';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(item);
+            });
+
+            for (const [category, list] of Object.entries(grouped)) {
+                const filteredList = list.filter(item => 
+                    (item.name && item.name.toLowerCase().includes(filter)) || 
+                    (item.detail && item.detail.toLowerCase().includes(filter)) ||
+                    category.toLowerCase().includes(filter)
+                );
+
+                if (filteredList.length === 0) continue;
+
+                // 類別黃色標頭行
+                const catRow = document.createElement('tr');
+                catRow.className = 'category-row';
+                catRow.innerHTML = `<td colspan="6">${category}</td>`;
+                tbody.appendChild(catRow);
+
+                // 數據行
+                filteredList.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.name || ''}</td>
+                        <td>${item.detail || ''}</td>
+                        <td class="price">${item.price ? '£' + Number(item.price).toFixed(2) : ''}</td>
+                        <td>${item.spec || ''}</td>
+                        <td>${item.pack || ''}</td>
+                        <td>
+                            <button class="action-btn edit-btn" onclick="openEditModal('${item.id}')">編輯</button>
+                            <button class="action-btn" onclick="deleteItem('${item.id}')">刪除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        // 新增項目
+        window.addItem = async function() {
+            const categorySelect = document.getElementById('categorySelect');
+            const category = categorySelect.value.trim();
+            const name = document.getElementById('name').value.trim();
+            const detail = document.getElementById('detail').value.trim();
+            const price = document.getElementById('price').value;
+            const spec = document.getElementById('spec').value.trim();
+            const pack = document.getElementById('pack').value.trim();
+
+            if (!category || category === '__new__') {
+                alert('請選擇或輸入有效的「分類」！');
+                return;
+            }
+            if (!name) {
+                alert('請輸入「中文品名」！');
+                return;
+            }
+
+            const newItem = { category, name, detail, price: price ? parseFloat(price) : "", spec, pack };
+
+            try {
+                await addDoc(itemsCollection, newItem);
+            } catch (e) {
+                // 本地儲存備用
+                items.push({ id: Date.now().toString(), ...newItem });
+                localStorage.setItem('purchase_items', JSON.stringify(items));
+                renderTable();
+                updateCategorySelects();
+            }
+
+            // 清空表單欄位
+            document.getElementById('name').value = '';
+            document.getElementById('detail').value = '';
+            document.getElementById('price').value = '';
+            document.getElementById('spec').value = '';
+            document.getElementById('pack').value = '';
+        };
+
+        // 刪除項目
+        window.deleteItem = async function(id) {
+            if (confirm('確定要刪除這筆紀錄嗎？')) {
+                try {
+                    await deleteDoc(doc(db, "shopping_items", id));
+                } catch (e) {
+                    items = items.filter(item => item.id !== id);
+                    localStorage.setItem('purchase_items', JSON.stringify(items));
+                    renderTable();
+                    updateCategorySelects();
+                }
+            }
+        };
+
+        // 開啟編輯對話框
+        window.openEditModal = function(id) {
+            editingId = id;
+            const item = items.find(i => i.id === id);
+            if (!item) return;
+
+            const editSelect = document.getElementById('editCategorySelect');
+            editSelect.value = item.category || '';
+            
+            // 如果選單中沒有該分類，動態插入
+            if (item.category && !Array.from(editSelect.options).some(opt => opt.value === item.category)) {
+                const opt = document.createElement('option');
+                opt.value = item.category;
+                opt.textContent = item.category;
+                editSelect.insertBefore(opt, editSelect.lastElementChild);
+                editSelect.value = item.category;
+            }
+
+            document.getElementById('editName').value = item.name || '';
+            document.getElementById('editDetail').value = item.detail || '';
+            document.getElementById('editPrice').value = item.price || '';
+            document.getElementById('editSpec').value = item.spec || '';
+            document.getElementById('editPack').value = item.pack || '';
+
+            document.getElementById('editModal').style.display = 'flex';
+        };
+
+        window.closeEditModal = function() {
+            document.getElementById('editModal').style.display = 'none';
+            editingId = null;
+        };
+
+        // 保存編輯
+        window.saveEdit = async function() {
+            if (!editingId) return;
+
+            const category = document.getElementById('editCategorySelect').value.trim();
+            const name = document.getElementById('editName').value.trim();
+            const detail = document.getElementById('editDetail').value.trim();
+            const price = document.getElementById('editPrice').value;
+            const spec = document.getElementById('editSpec').value.trim();
+            const pack = document.getElementById('editPack').value.trim();
+
+            if (!category || category === '__new__') {
+                alert('請選擇或輸入有效的「分類」！');
+                return;
+            }
+
+            const updatedData = { category, name, detail, price: price ? parseFloat(price) : "", spec, pack };
+
+            try {
+                await updateDoc(doc(db, "shopping_items", editingId), updatedData);
+            } catch (e) {
+                const index = items.findIndex(i => i.id === editingId);
+                if (index !== -1) {
+                    items[index] = { id: editingId, ...updatedData };
+                    localStorage.setItem('purchase_items', JSON.stringify(items));
+                    renderTable();
+                    updateCategorySelects();
+                }
+            }
+
+            closeEditModal();
+        };
+
+        // 分享網址功能
+        window.shareApp = function() {
+            navigator.clipboard.writeText(window.location.href);
+            alert('網址已複製到剪貼簿！傳送給家人即可共享並實時同步這份清單。');
+        };
+
+        // 搜尋監聽
+        document.getElementById('search').addEventListener('input', renderTable);
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-actions">
+        <h1>🛒 購買紀錄管理 App</h1>
+        <div class="btn-group">
+            <button class="btn-share" onclick="shareApp()">🔗 分享此清單</button>
+        </div>
+    </div>
+
+    <!-- 新增物品表單 -->
+    <div class="form-card">
+        <div class="form-title">➕ 新增購買項目</div>
+        <div class="form-group">
+            <select id="categorySelect" onchange="handleCategoryChange('categorySelect')">
+                <option value="">-- 請選擇分類 --</option>
+                <option value="__new__">+ 新增分類...</option>
+            </select>
+            <input type="text" id="name" placeholder="中文品名 (例: 大垃圾膠袋)">
+            <input type="text" id="detail" placeholder="英文細節 (例: EcoBag)">
+            <input type="number" step="0.01" id="price" placeholder="價格 (£)">
+            <input type="text" id="spec" placeholder="規格/尺寸 (例: 30mm)">
+            <input type="text" id="pack" placeholder="數量/包裝 (例: 50L)">
+            <button onclick="addItem()">新增保存</button>
+        </div>
+    </div>
+
+    <!-- 搜尋欄 -->
+    <input type="text" id="search" class="search-box" placeholder="🔍 搜尋物品、品牌或類別...">
+
+    <!-- 資料表格 -->
+    <table>
+        <thead>
+            <tr style="background:#f1f1f1;">
+                <th>中文品名</th>
+                <th>英文細節 / 品牌</th>
+                <th>價格 (£)</th>
+                <th>規格 / 尺寸</th>
+                <th>數量 / 包裝</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- 數據將由 JavaScript 動態生成 -->
+        </tbody>
+    </table>
+</div>
+
+<!-- 編輯對話框 (Modal) -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3>✏️ 編輯項目</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <label>分類：</label>
+            <select id="editCategorySelect" onchange="handleCategoryChange('editCategorySelect')">
+                <option value="">-- 請選擇分類 --</option>
+                <option value="__new__">+ 新增分類...</option>
+            </select>
+            <label>中文品名：</label>
+            <input type="text" id="editName">
+            <label>英文細節 / 品牌：</label>
+            <input type="text" id="editDetail">
+            <label>價格 (£)：</label>
+            <input type="number" step="0.01" id="editPrice">
+            <label>規格 / 尺寸：</label>
+            <input type="text" id="editSpec">
+            <label>數量 / 包裝：</label>
+            <input type="text" id="editPack">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeEditModal()">取消</button>
+            <button onclick="saveEdit()">儲存修改</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
