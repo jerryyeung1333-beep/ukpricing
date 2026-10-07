@@ -2,203 +2,331 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>購買物品價格與細節紀錄 App</title>
     <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-card: rgba(255, 255, 255, 0.45);
+            --primary-accent: #007aff;
+            --danger-color: #ff3b30;
+            --warning-color: #ffcc00;
+            --text-main: #1c1c1e;
+            --text-sub: #636366;
+            --category-bg: rgba(255, 214, 10, 0.35);
+        }
+
         * {
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
+
         body {
-            background-color: #f4f6f9;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
             margin: 0;
-            padding: 20px;
-            color: #333;
+            padding: 16px;
+            color: var(--text-main);
         }
+
         .container {
-            max-width: 950px;
+            max-width: 1150px;
             margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 24px;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
         }
+
         .header-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
         }
+
         h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(45deg, #1c1c1e, #3a3a3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
+
         .btn-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
-        .form-card {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            border: 1px solid #e9e9e9;
-        }
-        .form-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: #555;
-        }
-        .form-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 10px;
-        }
+
         input, select, button {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
             font-size: 14px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        input:focus, select:focus {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+
         button {
-            background-color: #28a745;
+            background-color: var(--primary-accent);
             color: white;
             border: none;
             cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        .btn-share {
-            background-color: #17a2b8;
-        }
-        .btn-share:hover {
-            background-color: #138496;
-        }
-        .search-box {
-            margin-bottom: 15px;
-            width: 100%;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            border: 1px solid #e0e0e0;
-            padding: 10px;
-            text-align: left;
-        }
-        tr.category-row {
-            background-color: #ffff00; /* 圖片中的經典黃色標籤 */
-            font-weight: bold;
-            font-size: 16px;
-        }
-        .price {
-            font-weight: bold;
-            color: #d9534f;
-        }
-        .action-btn {
-            background-color: #dc3545;
-            padding: 4px 8px;
-            font-size: 12px;
-            margin-left: 4px;
-        }
-        .action-btn:hover {
-            background-color: #c82333;
-        }
-        .edit-btn {
-            background-color: #ffc107;
-            color: #212529;
-        }
-        .edit-btn:hover {
-            background-color: #e0a800;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
         }
 
-        /* 模態框 Modal */
+        button:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: rgba(142, 142, 147, 0.2);
+            color: var(--text-main);
+            box-shadow: none;
+        }
+
+        .btn-share {
+            background-color: rgba(52, 199, 89, 0.85);
+            color: white;
+            box-shadow: 0 4px 12px rgba(52, 199, 89, 0.25);
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 14px;
+            padding: 12px 16px;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        th {
+            font-size: 13px;
+            color: var(--text-sub);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        tr.category-row {
+            background: var(--category-bg);
+            backdrop-filter: blur(5px);
+            font-weight: 700;
+            font-size: 15px;
+            color: #1c1c1e;
+        }
+
+        tr.category-row td {
+            border-radius: 10px;
+            padding: 8px 14px;
+        }
+
+        .price {
+            font-weight: 700;
+            color: var(--danger-color);
+        }
+
+        .date-tag {
+            font-size: 12px;
+            color: var(--text-sub);
+            white-space: nowrap;
+        }
+
+        .store-tag {
+            display: inline-block;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary-accent);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .action-btn {
+            background-color: var(--danger-color);
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(255, 59, 48, 0.2);
+        }
+
+        .edit-btn {
+            background-color: rgba(255, 204, 0, 0.9);
+            color: #1c1c1e;
+            box-shadow: 0 2px 6px rgba(255, 204, 0, 0.2);
+        }
+
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             justify-content: center;
             align-items: center;
             z-index: 1000;
-        }
-        .modal-content {
-            background: white;
             padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
         }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            padding: 24px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
         .modal-actions {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 16px; border-radius: 20px; }
+            .header-actions { flex-direction: column; align-items: flex-start; }
+            .btn-group { width: 100%; }
+            .btn-group button { flex: 1; }
+
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; }
+            tr.category-row { margin-top: 16px; margin-bottom: 8px; }
+
+            tbody tr:not(.category-row) {
+                background: rgba(255, 255, 255, 0.5);
+                backdrop-filter: blur(10px);
+                border: 1px solid var(--glass-border);
+                border-radius: 14px;
+                padding: 12px;
+                margin-bottom: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            }
+
+            td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 6px 4px;
+                border-bottom: 1px dashed rgba(0, 0, 0, 0.05);
+                font-size: 14px;
+            }
+
+            td:last-child {
+                border-bottom: none;
+                justify-content: flex-end;
+                padding-top: 10px;
+            }
+
+            td:nth-of-type(1)::before { content: "日期"; font-weight: 600; color: var(--text-sub); }
+            td:nth-of-type(2)::before { content: "購買地點"; font-weight: 600; color: var(--text-sub); }
+            td:nth-of-type(3)::before { content: "中文品名"; font-weight: 600; color: var(--text-sub); }
+            td:nth-of-type(4)::before { content: "英文細節/品牌"; font-weight: 600; color: var(--text-sub); }
+            td:nth-of-type(5)::before { content: "價格"; font-weight: 600; color: var(--text-sub); }
+            td:nth-of-type(6)::before { content: "規格/尺寸"; font-weight: 600; color: var(--text-sub); }
+            td:nth-of-type(7)::before { content: "數量/包裝"; font-weight: 600; color: var(--text-sub); }
+            
+            tr.category-row td::before { content: "" !important; }
         }
     </style>
 
-    <!-- Firebase SDK (Modular Version) -->
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
-            getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, writeBatch 
+            getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
-  apiKey: "AIzaSyBRlRpCYgaXL2HZ5C55-y4fynMDlRFxpDI",
-  authDomain: "uk-index-reference.firebaseapp.com",
-  projectId: "uk-index-reference",
-  storageBucket: "uk-index-reference.firebasestorage.app",
-  messagingSenderId: "168255655971",
-  appId: "1:168255655971:web:b81bfea93dff4b1ed86196",
-  measurementId: "G-VH79KZ54M8"
-};
+            apiKey: "AIzaSyBRlRpCYgaXL2HZ5C55-y4fynMDlRFxpDI",
+            authDomain: "uk-index-reference.firebaseapp.com",
+            projectId: "uk-index-reference",
+            storageBucket: "uk-index-reference.firebasestorage.app",
+            messagingSenderId: "168255655971",
+            appId: "1:168255655971:web:b81bfea93dff4b1ed86196",
+            measurementId: "G-VH79KZ54M8"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const itemsCollection = collection(db, "shopping_items");
+        const storesCollection = collection(db, "stores");
 
         let items = [];
+        let customStores = [];
         let editingId = null;
 
-        // 預設資料
-        const initialData = [
-            { category: "日用品", name: "洗衣珠", detail: "", price: "", spec: "", pack: "" },
-            { category: "日用品", name: "洗衣精", detail: "", price: "", spec: "", pack: "" },
-            { category: "日用品", name: "大垃圾膠袋", detail: "EcoBag Refuse Sacks", price: 5.99, spec: "30mm", pack: "50L" },
-            { category: "寵物", name: "白醋", detail: "Hexeal White Vinegar", price: 7.95, spec: "5Litre", pack: "2packs" },
-            { category: "寵物", name: "尿墊", detail: "Petklicity or Drylife", price: 23.00, spec: "90*60", pack: "100" },
-            { category: "寵物", name: "洗地清潔劑", detail: "Pet Disinfectant", price: 28.00, spec: "5Litre", pack: "4packs" },
-            { category: "寵物", name: "狗執屎袋", detail: "Dog poo bags", price: 19.00, spec: "", pack: "1000Pcs" },
-            { category: "寵物", name: "狗濕糧", detail: "Winalot Meaty Chunks", price: 19.95, spec: "100g", pack: "80packs" },
-            { category: "寵物", name: "狗濕糧", detail: "Winalot Sunday Dinner Gravy", price: 11.49, spec: "100g", pack: "40packs" },
-            { category: "寵物", name: "狗干糧", detail: "Tesco Beef & Vegetable Dry Dog Food 12Kg", price: 11.50, spec: "12kg", pack: "" },
-            { category: "寵物", name: "貓糧", detail: "", price: "", spec: "", pack: "" },
-            { category: "寵物", name: "貓砂", detail: "Fukumaru Tofu Cat", price: 27.13, spec: "6lb", pack: "4packs" }
+        const defaultStores = [
+            "Tesco", "Costco", "Sainsbury's", "Home Bargains", 
+            "B&M", "B&Q", "Amazon", "Dunelm", 
+            "Currys", "Asda", "Aldi", "Lidl"
         ];
 
-        // 實時監聽 Firestore 資料
+        const initialData = [
+            { date: "2026-10-01", category: "日用品", store: "Tesco", name: "洗衣珠", detail: "", price: "", spec: "", pack: "" },
+            { date: "2026-10-01", category: "日用品", store: "Tesco", name: "洗衣精", detail: "", price: "", spec: "", pack: "" },
+            { date: "2026-10-02", category: "日用品", store: "Amazon", name: "大垃圾膠袋", detail: "EcoBag Refuse Sacks", price: 5.99, spec: "30mm", pack: "50L" },
+            { date: "2026-10-03", category: "寵物", store: "Amazon", name: "白醋", detail: "Hexeal White Vinegar", price: 7.95, spec: "5Litre", pack: "2packs" },
+            { date: "2026-10-03", category: "寵物", store: "Costco", name: "尿墊", detail: "Petklicity or Drylife", price: 23.00, spec: "90*60", pack: "100" },
+            { date: "2026-10-04", category: "寵物", store: "Amazon", name: "洗地清潔劑", detail: "Pet Disinfectant", price: 28.00, spec: "5Litre", pack: "4packs" },
+            { date: "2026-10-04", category: "寵物", store: "Amazon", name: "狗執屎袋", detail: "Dog poo bags", price: 19.00, spec: "", pack: "1000Pcs" },
+            { date: "2026-10-05", category: "寵物", store: "Asda", name: "狗濕糧", detail: "Winalot Meaty Chunks", price: 19.95, spec: "100g", pack: "80packs" },
+            { date: "2026-10-05", category: "寵物", store: "Asda", name: "狗濕糧", detail: "Winalot Sunday Dinner Gravy", price: 11.49, spec: "100g", pack: "40packs" },
+            { date: "2026-10-06", category: "寵物", store: "Tesco", name: "狗干糧", detail: "Tesco Beef & Vegetable Dry Dog Food 12Kg", price: 11.50, spec: "12kg", pack: "" },
+            { date: "2026-10-06", category: "寵物", store: "Sainsbury's", name: "貓糧", detail: "", price: "", spec: "", pack: "" },
+            { date: "2026-10-07", category: "寵物", store: "Amazon", name: "貓砂", detail: "Fukumaru Tofu Cat", price: 27.13, spec: "6lb", pack: "4packs" }
+        ];
+
+        // 監聽購物項目資料庫
         onSnapshot(itemsCollection, (snapshot) => {
             items = [];
             snapshot.forEach(doc => {
                 items.push({ id: doc.id, ...doc.data() });
             });
             
-            // 如果雲端為空，自動載入初始資料
             if (items.length === 0 && !localStorage.getItem('initialized')) {
                 initDefaultData();
             } else {
@@ -206,11 +334,24 @@
                 updateCategorySelects();
             }
         }, (error) => {
-            console.warn("Firestore 使用離線/Demo模式:", error);
-            // 本地 LocalStorage 備用邏輯
+            console.warn("Firestore 離線模式:", error);
             items = JSON.parse(localStorage.getItem('purchase_items')) || initialData;
             renderTable();
             updateCategorySelects();
+        });
+
+        // 監聽地點資料庫
+        onSnapshot(storesCollection, (snapshot) => {
+            customStores = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.name) customStores.push(data.name);
+            });
+            updateStoreSelects();
+        }, (error) => {
+            console.warn("Stores 離線模式:", error);
+            customStores = JSON.parse(localStorage.getItem('custom_stores')) || [];
+            updateStoreSelects();
         });
 
         async function initDefaultData() {
@@ -220,7 +361,6 @@
             }
         }
 
-        // 更新分類選單（現有分類 + 新增分類選項）
         function updateCategorySelects() {
             const categories = [...new Set(items.map(item => item.category).filter(Boolean))];
             
@@ -231,13 +371,11 @@
                 const currentValue = select.value;
                 select.innerHTML = '';
 
-                // 預設提示
                 const defaultOpt = document.createElement('option');
                 defaultOpt.value = '';
                 defaultOpt.textContent = '-- 請選擇分類 --';
                 select.appendChild(defaultOpt);
 
-                // 現有分類
                 categories.forEach(cat => {
                     const opt = document.createElement('option');
                     opt.value = cat;
@@ -245,44 +383,94 @@
                     select.appendChild(opt);
                 });
 
-                // 新增分類選項
                 const newOpt = document.createElement('option');
                 newOpt.value = '__new__';
                 newOpt.textContent = '+ 新增分類...';
                 select.appendChild(newOpt);
 
-                // 保留先前選中的值
                 if (currentValue && currentValue !== '__new__') {
                     select.value = currentValue;
                 }
             });
         }
 
-        // 分類變更事件處理（關鍵修復處）
+        function updateStoreSelects() {
+            const allStores = [...new Set([...defaultStores, ...customStores])];
+
+            ['storeSelect', 'editStoreSelect'].forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (!select) return;
+
+                const currentValue = select.value;
+                select.innerHTML = '';
+
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value = '';
+                defaultOpt.textContent = '-- 購買地點 --';
+                select.appendChild(defaultOpt);
+
+                allStores.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = s;
+                    select.appendChild(opt);
+                });
+
+                const newOpt = document.createElement('option');
+                newOpt.value = '__new_store__';
+                newOpt.textContent = '+ 新增地點...';
+                select.appendChild(newOpt);
+
+                if (currentValue && currentValue !== '__new_store__') {
+                    select.value = currentValue;
+                }
+            });
+        }
+
         window.handleCategoryChange = function(selectId) {
             const select = document.getElementById(selectId);
             if (select.value === '__new__') {
                 const newCat = prompt('請輸入新分類名稱：');
                 if (newCat && newCat.trim() !== '') {
                     const trimmedCat = newCat.trim();
-
-                    // 檢查是否已存在該選項
                     let existingOpt = Array.from(select.options).find(opt => opt.value === trimmedCat);
                     if (!existingOpt) {
-                        // 動態將新選項插入在 "+ 新增分類..." 之前
                         const opt = document.createElement('option');
                         opt.value = trimmedCat;
                         opt.textContent = trimmedCat;
                         select.insertBefore(opt, select.lastElementChild);
                     }
-                    select.value = trimmedCat; // 設定為新選中的分類
+                    select.value = trimmedCat;
                 } else {
-                    select.value = ''; // 若取消則還原
+                    select.value = '';
                 }
             }
         };
 
-        // 渲染表格
+        window.handleStoreChange = async function(selectId) {
+            const select = document.getElementById(selectId);
+            if (select.value === '__new_store__') {
+                const newStore = prompt('請輸入新購買地點名稱：');
+                if (newStore && newStore.trim() !== '') {
+                    const trimmedStore = newStore.trim();
+
+                    const allStores = [...defaultStores, ...customStores];
+                    if (!allStores.includes(trimmedStore)) {
+                        try {
+                            await addDoc(storesCollection, { name: trimmedStore, createdAt: new Date() });
+                        } catch (e) {
+                            customStores.push(trimmedStore);
+                            localStorage.setItem('custom_stores', JSON.stringify(customStores));
+                            updateStoreSelects();
+                        }
+                    }
+                    select.value = trimmedStore;
+                } else {
+                    select.value = '';
+                }
+            }
+        };
+
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             const filter = document.getElementById('search').value.toLowerCase();
@@ -299,26 +487,28 @@
                 const filteredList = list.filter(item => 
                     (item.name && item.name.toLowerCase().includes(filter)) || 
                     (item.detail && item.detail.toLowerCase().includes(filter)) ||
+                    (item.store && item.store.toLowerCase().includes(filter)) ||
+                    (item.date && item.date.toLowerCase().includes(filter)) ||
                     category.toLowerCase().includes(filter)
                 );
 
                 if (filteredList.length === 0) continue;
 
-                // 類別黃色標頭行
                 const catRow = document.createElement('tr');
                 catRow.className = 'category-row';
-                catRow.innerHTML = `<td colspan="6">${category}</td>`;
+                catRow.innerHTML = `<td colspan="8">🏷️ ${category}</td>`;
                 tbody.appendChild(catRow);
 
-                // 數據行
                 filteredList.forEach(item => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${item.name || ''}</td>
-                        <td>${item.detail || ''}</td>
-                        <td class="price">${item.price ? '£' + Number(item.price).toFixed(2) : ''}</td>
-                        <td>${item.spec || ''}</td>
-                        <td>${item.pack || ''}</td>
+                        <td><span class="date-tag">${item.date || '-'}</span></td>
+                        <td><span class="store-tag">${item.store || '-'}</span></td>
+                        <td>${item.name || '-'}</td>
+                        <td>${item.detail || '-'}</td>
+                        <td class="price">${item.price ? '£' + Number(item.price).toFixed(2) : '-'}</td>
+                        <td>${item.spec || '-'}</td>
+                        <td>${item.pack || '-'}</td>
                         <td>
                             <button class="action-btn edit-btn" onclick="openEditModal('${item.id}')">編輯</button>
                             <button class="action-btn" onclick="deleteItem('${item.id}')">刪除</button>
@@ -329,10 +519,24 @@
             }
         }
 
-        // 新增項目
+        // 開啟與關閉新增彈窗
+        window.openAddModal = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            document.getElementById('addModal').style.display = 'flex';
+        };
+
+        window.closeAddModal = function() {
+            document.getElementById('addModal').style.display = 'none';
+        };
+
         window.addItem = async function() {
             const categorySelect = document.getElementById('categorySelect');
+            const storeSelect = document.getElementById('storeSelect');
+            
+            const date = document.getElementById('date').value;
             const category = categorySelect.value.trim();
+            const store = storeSelect.value.trim();
             const name = document.getElementById('name').value.trim();
             const detail = document.getElementById('detail').value.trim();
             const price = document.getElementById('price').value;
@@ -348,27 +552,39 @@
                 return;
             }
 
-            const newItem = { category, name, detail, price: price ? parseFloat(price) : "", spec, pack };
+            const newItem = { 
+                date: date || new Date().toISOString().split('T')[0],
+                category, 
+                store: store === '__new_store__' ? '' : store, 
+                name, 
+                detail, 
+                price: price ? parseFloat(price) : "", 
+                spec, 
+                pack 
+            };
 
             try {
                 await addDoc(itemsCollection, newItem);
             } catch (e) {
-                // 本地儲存備用
                 items.push({ id: Date.now().toString(), ...newItem });
                 localStorage.setItem('purchase_items', JSON.stringify(items));
                 renderTable();
                 updateCategorySelects();
             }
 
-            // 清空表單欄位
+            // 清空輸入框
             document.getElementById('name').value = '';
             document.getElementById('detail').value = '';
             document.getElementById('price').value = '';
             document.getElementById('spec').value = '';
             document.getElementById('pack').value = '';
+            categorySelect.value = '';
+            storeSelect.value = '';
+
+            // 關閉 Modal
+            closeAddModal();
         };
 
-        // 刪除項目
         window.deleteItem = async function(id) {
             if (confirm('確定要刪除這筆紀錄嗎？')) {
                 try {
@@ -382,16 +598,16 @@
             }
         };
 
-        // 開啟編輯對話框
         window.openEditModal = function(id) {
             editingId = id;
             const item = items.find(i => i.id === id);
             if (!item) return;
 
+            document.getElementById('editDate').value = item.date || new Date().toISOString().split('T')[0];
+
             const editSelect = document.getElementById('editCategorySelect');
             editSelect.value = item.category || '';
             
-            // 如果選單中沒有該分類，動態插入
             if (item.category && !Array.from(editSelect.options).some(opt => opt.value === item.category)) {
                 const opt = document.createElement('option');
                 opt.value = item.category;
@@ -399,6 +615,9 @@
                 editSelect.insertBefore(opt, editSelect.lastElementChild);
                 editSelect.value = item.category;
             }
+
+            const editStoreSelect = document.getElementById('editStoreSelect');
+            editStoreSelect.value = item.store || '';
 
             document.getElementById('editName').value = item.name || '';
             document.getElementById('editDetail').value = item.detail || '';
@@ -414,11 +633,12 @@
             editingId = null;
         };
 
-        // 保存編輯
         window.saveEdit = async function() {
             if (!editingId) return;
 
+            const date = document.getElementById('editDate').value;
             const category = document.getElementById('editCategorySelect').value.trim();
+            const store = document.getElementById('editStoreSelect').value.trim();
             const name = document.getElementById('editName').value.trim();
             const detail = document.getElementById('editDetail').value.trim();
             const price = document.getElementById('editPrice').value;
@@ -430,7 +650,16 @@
                 return;
             }
 
-            const updatedData = { category, name, detail, price: price ? parseFloat(price) : "", spec, pack };
+            const updatedData = { 
+                date,
+                category, 
+                store: store === '__new_store__' ? '' : store, 
+                name, 
+                detail, 
+                price: price ? parseFloat(price) : "", 
+                spec, 
+                pack 
+            };
 
             try {
                 await updateDoc(doc(db, "shopping_items", editingId), updatedData);
@@ -447,83 +676,124 @@
             closeEditModal();
         };
 
-        // 分享網址功能
         window.shareApp = function() {
             navigator.clipboard.writeText(window.location.href);
             alert('網址已複製到剪貼簿！傳送給家人即可共享並實時同步這份清單。');
         };
 
-        // 搜尋監聽
         document.getElementById('search').addEventListener('input', renderTable);
     </script>
 </head>
 <body>
-
 <div class="container">
     <div class="header-actions">
-        <h1>🛒 購買紀錄管理 App</h1>
+        <h1>🛒 購買紀錄管理</h1>
         <div class="btn-group">
+            <button onclick="openAddModal()">➕ 新增紀錄</button>
             <button class="btn-share" onclick="shareApp()">🔗 分享此清單</button>
         </div>
     </div>
 
-    <!-- 新增物品表單 -->
-    <div class="form-card">
-        <div class="form-title">➕ 新增購買項目</div>
-        <div class="form-group">
+    <!-- 搜尋欄 -->
+    <input type="text" id="search" class="search-box" placeholder="🔍 搜尋日期、地點、物品、品牌或類別...">
+
+    <!-- 資料表格/卡片容器 -->
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>購買地點</th>
+                    <th>中文品名</th>
+                    <th>英文細節 / 品牌</th>
+                    <th>價格 (£)</th>
+                    <th>規格 / 尺寸</th>
+                    <th>數量 / 包裝</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- 數據將由 JavaScript 動態生成 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 新增物品對話框 (Modal) -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0;">➕ 新增購買項目</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <label style="font-size:13px; color:var(--text-sub);">購買日期：</label>
+            <input type="date" id="date">
+
+            <label style="font-size:13px; color:var(--text-sub);">分類：</label>
             <select id="categorySelect" onchange="handleCategoryChange('categorySelect')">
                 <option value="">-- 請選擇分類 --</option>
                 <option value="__new__">+ 新增分類...</option>
             </select>
-            <input type="text" id="name" placeholder="中文品名 (例: 大垃圾膠袋)">
-            <input type="text" id="detail" placeholder="英文細節 (例: EcoBag)">
+
+            <label style="font-size:13px; color:var(--text-sub);">購買地點：</label>
+            <select id="storeSelect" onchange="handleStoreChange('storeSelect')">
+                <option value="">-- 購買地點 --</option>
+                <option value="__new_store__">+ 新增地點...</option>
+            </select>
+
+            <label style="font-size:13px; color:var(--text-sub);">中文品名：</label>
+            <input type="text" id="name" placeholder="例: 大垃圾膠袋">
+
+            <label style="font-size:13px; color:var(--text-sub);">英文細節 / 品牌：</label>
+            <input type="text" id="detail" placeholder="例: EcoBag">
+
+            <label style="font-size:13px; color:var(--text-sub);">價格 (£)：</label>
             <input type="number" step="0.01" id="price" placeholder="價格 (£)">
-            <input type="text" id="spec" placeholder="規格/尺寸 (例: 30mm)">
-            <input type="text" id="pack" placeholder="數量/包裝 (例: 50L)">
+
+            <label style="font-size:13px; color:var(--text-sub);">規格 / 尺寸：</label>
+            <input type="text" id="spec" placeholder="例: 30mm">
+
+            <label style="font-size:13px; color:var(--text-sub);">數量 / 包裝：</label>
+            <input type="text" id="pack" placeholder="例: 50L">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeAddModal()">取消</button>
             <button onclick="addItem()">新增保存</button>
         </div>
     </div>
-
-    <!-- 搜尋欄 -->
-    <input type="text" id="search" class="search-box" placeholder="🔍 搜尋物品、品牌或類別...">
-
-    <!-- 資料表格 -->
-    <table>
-        <thead>
-            <tr style="background:#f1f1f1;">
-                <th>中文品名</th>
-                <th>英文細節 / 品牌</th>
-                <th>價格 (£)</th>
-                <th>規格 / 尺寸</th>
-                <th>數量 / 包裝</th>
-                <th>操作</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <!-- 數據將由 JavaScript 動態生成 -->
-        </tbody>
-    </table>
 </div>
 
 <!-- 編輯對話框 (Modal) -->
 <div id="editModal" class="modal">
     <div class="modal-content">
-        <h3>✏️ 編輯項目</h3>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <label>分類：</label>
+        <h3 style="margin-top:0;">✏️ 編輯項目</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <label style="font-size:13px; color:var(--text-sub);">購買日期：</label>
+            <input type="date" id="editDate">
+
+            <label style="font-size:13px; color:var(--text-sub);">分類：</label>
             <select id="editCategorySelect" onchange="handleCategoryChange('editCategorySelect')">
                 <option value="">-- 請選擇分類 --</option>
                 <option value="__new__">+ 新增分類...</option>
             </select>
-            <label>中文品名：</label>
+
+            <label style="font-size:13px; color:var(--text-sub);">購買地點：</label>
+            <select id="editStoreSelect" onchange="handleStoreChange('editStoreSelect')">
+                <option value="">-- 購買地點 --</option>
+                <option value="__new_store__">+ 新增地點...</option>
+            </select>
+
+            <label style="font-size:13px; color:var(--text-sub);">中文品名：</label>
             <input type="text" id="editName">
-            <label>英文細節 / 品牌：</label>
+
+            <label style="font-size:13px; color:var(--text-sub);">英文細節 / 品牌：</label>
             <input type="text" id="editDetail">
-            <label>價格 (£)：</label>
+
+            <label style="font-size:13px; color:var(--text-sub);">價格 (£)：</label>
             <input type="number" step="0.01" id="editPrice">
-            <label>規格 / 尺寸：</label>
+
+            <label style="font-size:13px; color:var(--text-sub);">規格 / 尺寸：</label>
             <input type="text" id="editSpec">
-            <label>數量 / 包裝：</label>
+
+            <label style="font-size:13px; color:var(--text-sub);">數量 / 包裝：</label>
             <input type="text" id="editPack">
         </div>
         <div class="modal-actions">
