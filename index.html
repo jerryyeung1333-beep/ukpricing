@@ -110,6 +110,59 @@
             box-shadow: 0 4px 12px rgba(52, 199, 89, 0.25);
         }
 
+        /* 分類標籤樣式 */
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            scrollbar-width: thin;
+        }
+
+        .category-tab {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-sub);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            box-shadow: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .category-tab:hover {
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-main);
+        }
+
+        .category-tab.active {
+            background: var(--primary-accent);
+            color: white;
+            border-color: var(--primary-accent);
+            box-shadow: 0 4px 10px rgba(0, 122, 255, 0.25);
+        }
+
+        .category-tab .badge {
+            background: rgba(0, 0, 0, 0.08);
+            color: inherit;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .category-tab.active .badge {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
         .search-box {
             margin-bottom: 20px;
             width: 100%;
@@ -159,6 +212,11 @@
         .price {
             font-weight: 700;
             color: var(--danger-color);
+        }
+
+        .unit-price {
+            font-weight: 600;
+            color: #2c3e50;
         }
 
         .date-tag {
@@ -268,6 +326,7 @@
             td:nth-of-type(5)::before { content: "價格"; font-weight: 600; color: var(--text-sub); }
             td:nth-of-type(6)::before { content: "規格/尺寸"; font-weight: 600; color: var(--text-sub); }
             td:nth-of-type(7)::before { content: "數量/包裝"; font-weight: 600; color: var(--text-sub); }
+            td:nth-of-type(8)::before { content: "單價"; font-weight: 600; color: var(--text-sub); }
             
             tr.category-row td::before { content: "" !important; }
         }
@@ -298,6 +357,7 @@
         let items = [];
         let customStores = [];
         let editingId = null;
+        let selectedCategoryFilter = 'ALL';
 
         const defaultStores = [
             "Tesco", "Costco", "Sainsbury's", "Home Bargains", 
@@ -320,7 +380,6 @@
             { date: "2026-10-07", category: "寵物", store: "Amazon", name: "貓砂", detail: "Fukumaru Tofu Cat", price: 27.13, spec: "6lb", pack: "4packs" }
         ];
 
-        // 監聽購物項目資料庫
         onSnapshot(itemsCollection, (snapshot) => {
             items = [];
             snapshot.forEach(doc => {
@@ -330,17 +389,18 @@
             if (items.length === 0 && !localStorage.getItem('initialized')) {
                 initDefaultData();
             } else {
+                renderCategoryTabs();
                 renderTable();
                 updateCategorySelects();
             }
         }, (error) => {
             console.warn("Firestore 離線模式:", error);
             items = JSON.parse(localStorage.getItem('purchase_items')) || initialData;
+            renderCategoryTabs();
             renderTable();
             updateCategorySelects();
         });
 
-        // 監聽地點資料庫
         onSnapshot(storesCollection, (snapshot) => {
             customStores = [];
             snapshot.forEach(doc => {
@@ -360,6 +420,56 @@
                 await addDoc(itemsCollection, item);
             }
         }
+
+        // 計算單價（價格 / 數量）
+        function calculateUnitPrice(price, pack) {
+            if (!price || !pack) return '-';
+            const priceNum = parseFloat(price);
+            if (isNaN(priceNum)) return '-';
+
+            // 從 pack 中提取第一個數字（包含小數）
+            const match = String(pack).match(/(\d+(?:\.\d+)?)/);
+            if (!match) return '-';
+
+            const qty = parseFloat(match[0]);
+            if (isNaN(qty) || qty === 0) return '-';
+
+            const unitPrice = priceNum / qty;
+            return '£' + unitPrice.toFixed(2);
+        }
+
+        function renderCategoryTabs() {
+            const tabsContainer = document.getElementById('categoryTabs');
+            if (!tabsContainer) return;
+
+            const categoryCounts = {};
+            items.forEach(item => {
+                const cat = item.category || '未分類';
+                categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+            });
+
+            tabsContainer.innerHTML = '';
+
+            const allBtn = document.createElement('button');
+            allBtn.className = `category-tab ${selectedCategoryFilter === 'ALL' ? 'active' : ''}`;
+            allBtn.innerHTML = `全部 <span class="badge">${items.length}</span>`;
+            allBtn.onclick = () => filterByCategory('ALL');
+            tabsContainer.appendChild(allBtn);
+
+            Object.keys(categoryCounts).sort().forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = `category-tab ${selectedCategoryFilter === cat ? 'active' : ''}`;
+                btn.innerHTML = `${cat} <span class="badge">${categoryCounts[cat]}</span>`;
+                btn.onclick = () => filterByCategory(cat);
+                tabsContainer.appendChild(btn);
+            });
+        }
+
+        window.filterByCategory = function(category) {
+            selectedCategoryFilter = category;
+            renderCategoryTabs();
+            renderTable();
+        };
 
         function updateCategorySelects() {
             const categories = [...new Set(items.map(item => item.category).filter(Boolean))];
@@ -479,6 +589,11 @@
             const grouped = {};
             items.forEach(item => {
                 const cat = item.category || '未分類';
+
+                if (selectedCategoryFilter !== 'ALL' && cat !== selectedCategoryFilter) {
+                    return;
+                }
+
                 if (!grouped[cat]) grouped[cat] = [];
                 grouped[cat].push(item);
             });
@@ -496,10 +611,11 @@
 
                 const catRow = document.createElement('tr');
                 catRow.className = 'category-row';
-                catRow.innerHTML = `<td colspan="8">🏷️ ${category}</td>`;
+                catRow.innerHTML = `<td colspan="9">🏷️ ${category} (${filteredList.length})</td>`;
                 tbody.appendChild(catRow);
 
                 filteredList.forEach(item => {
+                    const unitPrice = calculateUnitPrice(item.price, item.pack);
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td><span class="date-tag">${item.date || '-'}</span></td>
@@ -509,6 +625,7 @@
                         <td class="price">${item.price ? '£' + Number(item.price).toFixed(2) : '-'}</td>
                         <td>${item.spec || '-'}</td>
                         <td>${item.pack || '-'}</td>
+                        <td class="unit-price">${unitPrice}</td>
                         <td>
                             <button class="action-btn edit-btn" onclick="openEditModal('${item.id}')">編輯</button>
                             <button class="action-btn" onclick="deleteItem('${item.id}')">刪除</button>
@@ -519,7 +636,6 @@
             }
         }
 
-        // 開啟與關閉新增彈窗
         window.openAddModal = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
@@ -568,11 +684,11 @@
             } catch (e) {
                 items.push({ id: Date.now().toString(), ...newItem });
                 localStorage.setItem('purchase_items', JSON.stringify(items));
+                renderCategoryTabs();
                 renderTable();
                 updateCategorySelects();
             }
 
-            // 清空輸入框
             document.getElementById('name').value = '';
             document.getElementById('detail').value = '';
             document.getElementById('price').value = '';
@@ -581,7 +697,6 @@
             categorySelect.value = '';
             storeSelect.value = '';
 
-            // 關閉 Modal
             closeAddModal();
         };
 
@@ -592,6 +707,7 @@
                 } catch (e) {
                     items = items.filter(item => item.id !== id);
                     localStorage.setItem('purchase_items', JSON.stringify(items));
+                    renderCategoryTabs();
                     renderTable();
                     updateCategorySelects();
                 }
@@ -668,6 +784,7 @@
                 if (index !== -1) {
                     items[index] = { id: editingId, ...updatedData };
                     localStorage.setItem('purchase_items', JSON.stringify(items));
+                    renderCategoryTabs();
                     renderTable();
                     updateCategorySelects();
                 }
@@ -694,6 +811,9 @@
         </div>
     </div>
 
+    <!-- 頂部子分類標籤區域 -->
+    <div id="categoryTabs" class="category-tabs"></div>
+
     <!-- 搜尋欄 -->
     <input type="text" id="search" class="search-box" placeholder="🔍 搜尋日期、地點、物品、品牌或類別...">
 
@@ -709,6 +829,7 @@
                     <th>價格 (£)</th>
                     <th>規格 / 尺寸</th>
                     <th>數量 / 包裝</th>
+                    <th>單價 (£)</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -798,10 +919,9 @@
         </div>
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeEditModal()">取消</button>
-            <button onclick="saveEdit()">儲存修改</button>
+            <button onclick="saveEdit()">更新保存</button>
         </div>
     </div>
 </div>
-
 </body>
 </html>
